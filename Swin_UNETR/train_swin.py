@@ -62,8 +62,9 @@ print(" Ready for the CNN vs Transformer duel!")
 
 
 
-
-# Training Loop for Swin-UNETR Hybrid Model (Optimized for L4 GPU) ---
+# =======================================================================
+#  Swin-UNETR Hybrid Model Training Loop (Optimized for L4 GPU)
+# =======================================================================
 
 import time
 import torch
@@ -75,7 +76,7 @@ from monai.data import decollate_batch
 max_epochs = CONFIG["max_epochs"]
 val_interval = CONFIG["val_interval"]
 
-# start training
+# Set to 0 to start training from scratch on the new 70/15/15 split
 start_epoch = 0
 
 best_metric = -1
@@ -83,17 +84,16 @@ best_metric_epoch = -1
 epoch_loss_values = []
 metric_values = []
 
-# Post-processing tools to adapt outputs for the Dice metric
+# Post-processing tools to adapt model outputs for the Dice metric calculation
 post_pred = AsDiscrete(argmax=True, to_onehot=5)
 post_label = AsDiscrete(to_onehot=5)
 
-# Initialize AMP scaler (Accelerated computations in Float16 for L4 GPU)
+# Initialize AMP scaler (Accelerated Float16 computations on the L4 GPU)
 scaler = torch.cuda.amp.GradScaler()
 
-print(" Starting Swin-UNETR run...")
-print(f" Resume scheduled at Epoch {start_epoch + 1}/{max_epochs}")
-# TODO: Update the save path below to a local directory (e.g., './checkpoints/...')
-print(" Saving best model weights to disk...\n")
+print("Starting Swin-UNETR run on Colab L4 GPU...")
+print(f"Training scheduled from Epoch {start_epoch + 1} to {max_epochs}")
+print(f"Direct saving to Drive: /content/drive/MyDrive/PFE_BraTS_70_15_15/best_swin_unetr_model.pth\n")
 
 for epoch in range(start_epoch, max_epochs):
     print("-" * 50)
@@ -110,28 +110,28 @@ for epoch in range(start_epoch, max_epochs):
 
         optimizer.zero_grad()
 
-        # Computations wrapped in autocast to optimize VRAM
+        # Computations wrapped in autocast to optimize VRAM usage
         with torch.cuda.amp.autocast():
             outputs = model(inputs)
             loss = loss_function(outputs, labels)
 
-        # Backpropagation and weight updates via AMP Scaler
+        # Backpropagation and weight updates via the AMP Scaler
         scaler.scale(loss).backward()
         scaler.step(optimizer)
         scaler.update()
 
         epoch_loss += loss.item()
         if step % 100 == 0:
-            print(f"⏱ Step {step}/{len(train_loader)} - Current Loss: {loss.item():.4f}")
+            print(f"Step {step}/{len(train_loader)} - Current Loss: {loss.item():.4f}")
 
     epoch_loss /= step
     epoch_loss_values.append(epoch_loss)
     elapsed_time = time.time() - start_time
-    print(f" Epoch {epoch + 1} completed in {elapsed_time/60:.2f} min - Average Loss: {epoch_loss:.4f}")
+    print(f"Epoch {epoch + 1} completed in {elapsed_time/60:.2f} min - Average Loss: {epoch_loss:.4f}")
 
     # --- VALIDATION PHASE ---
     if (epoch + 1) % val_interval == 0:
-        print("🧹 Preventive VRAM flush before validation...")
+        print("Performing preventive VRAM flush before validation...")
         model.eval()
 
         # Clear training residuals to prevent memory spikes
@@ -142,7 +142,7 @@ for epoch in range(start_epoch, max_epochs):
             for val_data in val_loader:
                 val_inputs, val_labels = val_data["image"].to(device), val_data["label"].to(device)
 
-                # Sliding window inference (sw_batch_size=2 is ideal for L4 GPU)
+                # Sliding window inference (sw_batch_size=2 is ideal for the L4 GPU)
                 with torch.cuda.amp.autocast():
                     val_outputs = sliding_window_inference(
                         inputs=val_inputs,
@@ -160,16 +160,12 @@ for epoch in range(start_epoch, max_epochs):
             dice_metric.reset()
             metric_values.append(metric)
 
-            # Immediate saving of the best model
+            # Immediate saving of the best model to Google Drive
             if metric > best_metric:
                 best_metric = metric
                 best_metric_epoch = epoch + 1
-                
-                # NOTE: The path below was used during Colab training. 
-                # TODO: Change it to a local path, e.g., './checkpoints/best_swin_unetr_model.pth'
-                save_path = '/content/drive/MyDrive/PFE_BraTS/best_swin_unetr_model.pth'
-                torch.save(model.state_dict(), save_path)
-                print(f"✨ Excellent! Checkpoint updated (Dice: {best_metric:.4f})")
+                torch.save(model.state_dict(), '/content/drive/MyDrive/PFE_BraTS_70_15_15/best_swin_unetr_model.pth')
+                print(f"Excellent! Checkpoint updated on Google Drive (Dice: {best_metric:.4f})")
 
             print(f"Validation Dice Score: {metric:.4f} (Best: {best_metric:.4f} at epoch {best_metric_epoch})")
 
@@ -177,4 +173,4 @@ for epoch in range(start_epoch, max_epochs):
         gc.collect()
         torch.cuda.empty_cache()
 
-print("\n Swin-UNETR training successfully completed 100%!")
+print("\nSwin-UNETR training successfully completed 100%!")
