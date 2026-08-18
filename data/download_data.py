@@ -3,7 +3,7 @@
 # =======================================================================
 # KAGGLE API SETUP (RELATED TO DOWNLOADING THE BRATS DATASET)
 # This cell configures the Kaggle credentials required to download 
-# the dataset directly into the training environment.
+# the dataset directly into the training environment
 # =======================================================================
 
 import json
