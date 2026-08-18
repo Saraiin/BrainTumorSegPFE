@@ -20,7 +20,7 @@ os.environ["CCCL_IGNORE_DEPRECATED_CPP_DIALECT"] = "1"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 drive_dir = '/content/drive/MyDrive/PFE_BraTS_70_15_15/'
 
-# 💡 Modify if your model instance has a different name in your notebook
+#  Modify if your model instance has a different name in your notebook
 UNET_MODEL_INSTANCE = model
 
 # --- 1. AUTOMATIC CHANNEL FORMAT ANALYSIS ---
