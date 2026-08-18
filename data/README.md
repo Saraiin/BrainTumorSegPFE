@@ -1,14 +1,13 @@
-# Dataset - BraTS 2021 (Brain Tumor Segmentation)
+# Dataset - BraTS 2021 Task 1 (Brain Tumor Segmentation)
 
 This folder contains the scripts and configuration required to download and set up the dataset used for this Master's Thesis project.
 
 ## Dataset Link
-You can find and access the official dataset challenge page on Kaggle here:
- **[RSNA-ASNR-MICCAI BraTS 2021 Challenge on Kaggle](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification)** 
-*(Note: You can also use the dedicated BraTS 2021 dataset versions available on Kaggle).*
+You can access the official dataset page on Kaggle here:
+ **[BraTS 2021 Task 1 Dataset on Kaggle](https://www.kaggle.com/datasets/dschettler8845/brats-2021-task1/data)**
 
 ## Dataset Description
-The dataset consists of multi-parametric MRI scans of brain tumors (Glioma), focusing on preoperative scans. 
+The dataset consists of multi-parametric MRI scans of brain tumors (Glioma), specifically structured for Task 1 (Segmentation). 
 
 Each patient directory contains 4 modalities:
 * **T1**: T1-weighted, native scans.
@@ -24,6 +23,6 @@ Each patient directory contains 4 modalities:
 ## How to Download the Data
 1. Make sure you have a Kaggle account.
 2. Go to your Kaggle account settings to generate and download your API credentials (`kaggle.json`).
-3. Run the Kaggle setup script in this folder with your credentials, or use the Kaggle CLI directly:
+3. Run the Kaggle setup script in this folder with your credentials, or use the Kaggle CLI directly to download this dataset:
    ```bash
-   kaggle competitions download -c rsna-miccai-brain-tumor-radiogenomic-classification
+   kaggle datasets download -d dschettler8845/brats-2021-task1
